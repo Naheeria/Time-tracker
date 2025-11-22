@@ -8,16 +8,13 @@
 </head>
 <body>
     <div id="tracker-widget" class="card">
-
-        <!-- -------------------------------------- -->
-        <!-- 🎀 메인 화면 -->
-        <!-- -------------------------------------- -->
+        
         <div id="main-view">
             <h2 class="widget-title">🗓️ 파스텔 타임 트래커</h2>
             
             <div id="control-panel">
                 <input type="text" id="task-name" placeholder="지금 하는 일을 입력해주세요..." maxlength="50">
-                <button id="start-button" onclick="handleStartStop()">START</button>
+                <button id="start-button">START</button> 
             </div>
             
             <div id="timer-display">
@@ -41,27 +38,22 @@
                 </table>
             </div>
 
-            <!-- 📌 하단 버튼 영역 (좌/우 배치) -->
-            <div id="bottom-buttons">
-                <button id="reset-button" onclick="resetAllRecords()">🔄 초기화</button>
-                <button id="summary-button">📘 오늘 요약</button>
+            <div id="action-buttons">
+                <button id="reset-button">🔄 기록 초기화</button> 
+                <button id="summary-button">오늘 요약 보기</button>
             </div>
         </div>
 
-
-        <!-- -------------------------------------- -->
-        <!-- 📘 요약 화면 -->
-        <!-- -------------------------------------- -->
-        <div id="summary-view" style="display:none;">
-            <h2 class="widget-title">📘 오늘 요약</h2>
-
-            <div id="summary-content" class="summary-box">
-                <!-- JS에서 자동 생성 -->
+        <div id="summary-view" style="display: none;">
+            <h3 class="widget-title">📈 오늘 요약</h3>
+            
+            <div id="summary-content">
+                기록이 없습니다.
             </div>
 
-            <button id="back-button">↩ 돌아가기</button>
+            <button id="back-button">⬅️ 트래커로 돌아가기</button>
         </div>
-
+        
     </div>
 
     <script src="script.js"></script>
