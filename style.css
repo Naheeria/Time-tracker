@@ -1,6 +1,6 @@
 /* ------------------------------
-🌸 파스텔 테마 변수 (그대로 유지)
------------------------------- */
+    🌸 파스텔 테마 변수 (그대로 유지)
+    ------------------------------ */
 :root {
     --bg: #f7fbff;
     --card: #ffffff;
@@ -23,8 +23,8 @@
 }
 
 /* ------------------------------
-🌸 전체 스타일
------------------------------- */
+    🌸 전체 스타일
+    ------------------------------ */
 body {
     background: var(--bg);
     font-family: "Pretendard", sans-serif;
@@ -36,10 +36,10 @@ body {
 
 /* 위젯 카드 (🔥 사이즈 축소) */
 #tracker-widget.card {
-    width: 250px;              /* 💛 핵심: 쁘띠 사이즈 */
+    width: 250px;           /* 💛 핵심: 쁘띠 사이즈 */
     background: var(--card);
     border-radius: var(--radius);
-    padding: 14px 14px;         /* 🔥 내부 여백 축소 */
+    padding: 14px 14px;        /* 🔥 내부 여백 축소 */
     box-shadow: var(--shadow);
     border: 1.5px solid var(--border);
 }
@@ -48,14 +48,14 @@ body {
 .widget-title {
     text-align: center;
     color: var(--accent-dark);
-    font-size: 15px;            /* 🔥 작게 */
+    font-size: 15px;           /* 🔥 작게 */
     margin-bottom: 12px;
     font-weight: 800;
 }
 
 /* ------------------------------
-✨ 컨트롤 패널 (🔥 소형화)
------------------------------- */
+    ✨ 컨트롤 패널 (🔥 소형화)
+    ------------------------------ */
 #control-panel {
     display: flex;
     gap: 6px;
@@ -64,8 +64,8 @@ body {
 
 #task-name {
     flex-grow: 1;
-    padding: 6px 8px;           /* 🔥 작게 */
-    font-size: 11px;            /* 🔥 작게 */
+    padding: 6px 8px;          /* 🔥 작게 */
+    font-size: 11px;           /* 🔥 작게 */
     border: 1.6px solid var(--border);
     border-radius: var(--radius);
     background: #fff;
@@ -80,7 +80,7 @@ body {
 
 /* 버튼 공통 */
 button {
-    padding: 6px 10px;          /* 🔥 작게 */
+    padding: 6px 10px;           /* 🔥 작게 */
     font-size: 11px;
     font-weight: 700;
     border: none;
@@ -108,8 +108,8 @@ button {
 }
 
 /* ------------------------------
-⏱ 타이머 (🔥 소형화)
------------------------------- */
+    ⏱ 타이머 (🔥 소형화)
+    ------------------------------ */
 #timer-display {
     text-align: center;
     font-size: 20px;         /* 🔥 기존 32 → 20 */
@@ -119,8 +119,8 @@ button {
 }
 
 /* ------------------------------
-📊 표 섹션
------------------------------- */
+    📊 표 섹션
+    ------------------------------ */
 #grid-container {
     overflow-x: auto;
 }
@@ -163,8 +163,8 @@ thead th {
 }
 
 /* ------------------------------
-✨ 셀 라벨 (가독성 유지)
------------------------------- */
+    ✨ 셀 라벨 (가독성 유지)
+    ------------------------------ */
 .cell-label {
     position: absolute;
     top: 50%;
@@ -180,14 +180,65 @@ thead th {
     text-shadow: 0 0 2px rgba(255,255,255,0.6);
 }
 
-/* 초기화 버튼 */
+/* ------------------------------
+    ✨ 버튼 그룹 (초기화 + 요약)
+    ------------------------------ */
+#action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px; /* 위쪽에 여백 추가 */
+}
+
+/* 기록 초기화 버튼 */
 #reset-button {
-    width: 100%;
-    margin-top: 12px;
+    flex-grow: 1; /* 너비 균등 분할 */
     padding: 8px;
     background: #e6e6e6;
     font-size: 11px;
 }
 #reset-button:hover {
+    background: #d6d6d6;
+}
+
+/* 오늘 요약 보기 버튼 */
+#summary-button {
+    flex-grow: 1; /* 너비 균등 분할 */
+    padding: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+}
+#summary-button:hover {
+    background: var(--accent-dark);
+}
+
+/* ------------------------------
+    ✨ 요약 화면 스타일 (채찍이 반영)
+    ------------------------------ */
+#summary-view {
+    padding: 10px;
+    display: none; /* 초기에는 숨김 */
+}
+
+#summary-content div {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+#summary-content div:last-child {
+    border-bottom: none;
+}
+
+/* 뒤로가기 버튼 (채찍이 반영) */
+#back-button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background: #e6e6e6;
+    font-size: 12px;
+}
+#back-button:hover {
     background: #d6d6d6;
 }
