@@ -4,51 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>파스텔 타임 트래커</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* [기존 style.css 내용]을 여기에 붙여넣으세요. */
+        
+        /* 🎨 새 요약 화면 스타일 (아래 2. CSS 섹션 참고) */
+        :root{ /* 기존에 정의된 변수 재정의 */
+          --bg:#f7fbff; --card:#fff; --accent:#8abfff; --muted:#6f7c8f;
+          --radius:12px;
+          --accent-dark: #5a9ce8; /* 기존 변수 추가 */
+        }
+        
+        /* -------------------------- */
+        /* ✨ SUMMARY VIEW STYLES ✨ */
+        /* -------------------------- */
+        #summary-view {
+            padding: 10px;
+            display: none;
+            /* 위젯 크기가 250px이므로 그래프가 들어갈 수 있게 조정합니다. */
+        }
+        .summary-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: 0 3px 10px rgba(120, 160, 210, 0.1);
+            padding: 12px;
+            border: 1px solid #e6f1ff;
+            margin-bottom: 10px;
+        }
+
+        /* 1. 요약/총합 섹션 */
+        .headline{font-weight:800;color:var(--accent);font-size:14px;margin-bottom:8px;text-align:center}
+        #total-hours{font-size:20px;font-weight:800;text-align:center;margin:6px 0;color:#3a4b66}
+        .tasks{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+        .task{display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:8px;background:#fbfdff;border:1px solid #f0f6ff}
+        .badge{display:inline-block;padding:4px 6px;border-radius:999px;font-weight:700;font-size:10px;color:var(--text-main)} /* 뱃지 스타일 수정 */
+        .small{font-size:10px;color:var(--muted)}
+        .task strong{font-size:12px;}
+
+        /* 2. 그래프 섹션 */
+        #donut-chart-container {
+            position: relative;
+            width: 100%;
+            height: 180px; /* 고정 높이 */
+        }
+        #donut-chart-container h3{color:var(--accent-dark);margin:0 0 8px 0;font-size:14px; text-align: center;}
+        .legend{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;justify-content: center;}
+        .legend-item{display:flex;gap:4px;align-items:center;padding:4px 6px;border-radius:999px;background:#fbfdff;border:1px solid #f0f6ff;font-size:10px}
+        .swatch{width:10px;height:10px;border-radius:3px}
+
+        /* 뒤로가기 버튼은 기존 #back-button 스타일 사용 */
+        
+    </style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div id="tracker-widget" class="card">
         
         <div id="main-view">
-            <h2 class="widget-title">🗓️ 파스텔 타임 트래커</h2>
-            
-            <div id="control-panel">
-                <input type="text" id="task-name" placeholder="지금 하는 일을 입력해주세요..." maxlength="50">
-                <button id="start-button">START</button> 
             </div>
-            
-            <div id="timer-display">
-                <span id="time-elapsed">00:00:00</span>
-            </div>
-
-            <div id="grid-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="time-header">시</th>
-                            <th>00</th>
-                            <th>10</th>
-                            <th>20</th>
-                            <th>30</th>
-                            <th>40</th>
-                            <th>50</th>
-                        </tr>
-                    </thead>
-                    <tbody id="time-grid-body"></tbody>
-                </table>
-            </div>
-
-            <div id="action-buttons">
-                <button id="reset-button">🔄 기록 초기화</button> 
-                <button id="summary-button">오늘 요약 보기</button>
-            </div>
-        </div>
 
         <div id="summary-view" style="display: none;">
-            <h3 class="widget-title">📈 오늘 요약</h3>
             
-            <div id="summary-content">
-                기록이 없습니다.
+            <div class="summary-card">
+                <div class="headline">오늘 요약</div>
+                <div id="total-hours" class="total"></div>
+                <div id="task-list" class="tasks">
+                    </div>
+            </div>
+
+            <div class="summary-card" id="donut-chart-container">
+                <h3>태스크 분포</h3>
+                <canvas id="donut"></canvas>
+                <div class="legend" id="legend"></div>
             </div>
 
             <button id="back-button">⬅️ 트래커로 돌아가기</button>
