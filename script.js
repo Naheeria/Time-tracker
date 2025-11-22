@@ -1,22 +1,25 @@
-// 전역 변수 설정
+// ----------------------------------------------------
+// 🌸 전역 변수
+// ----------------------------------------------------
 let isTracking = false;
 let timerInterval = null;
 let currentTask = { name: '', startTime: 0, color: '' };
 let lastColor = null;
 
-// 파스텔 컬러 팔레트 (확장 + 더 예쁜 톤)
+// ----------------------------------------------------
+// 🌸 파스텔 팔레트 (랜덤 + 이전 중복 금지)
+// ----------------------------------------------------
 const PASTEL_COLORS = [
-    '#a2e8c2', // 연녹
-    '#ffdb99', // 크림 오렌지
-    '#a3c1e7', // 연하늘
-    '#f2a9d8', // 핑크
-    '#c4a8f0', // 연보라
-    '#ffe4e1', // 살구
-    '#c6f3e8', // 민트
-    '#fde2f3', // 라일락 핑크
+    "#a2e8c2", // 연녹
+    "#ffdb99", // 크림 오렌지
+    "#a3c1e7", // 연하늘
+    "#f2a9d8", // 핑크
+    "#c4a8f0", // 연보라
+    "#ffe4e1", // 살구
+    "#c6f3e8", // 민트
+    "#fde2f3"  // 라일락 핑크
 ];
 
-// 랜덤 파스텔 색 + 이전과 중복 방지
 function getRandomPastelColor(prev) {
     let color;
     do {
@@ -25,59 +28,64 @@ function getRandomPastelColor(prev) {
     return color;
 }
 
-// 그리드 시간 설정
-const START_HOUR = 6;
-const END_HOUR = 2;
-const TOTAL_HOURS = 21;
+// ----------------------------------------------------
+// 🌸 시간 설정 (옵션 A)
+// ----------------------------------------------------
+const START_HOUR = 8;   // 08:00 시작
+const END_HOUR = 23;    // 23:50까지
 const MINUTES_PER_CELL = 10;
 
-// DOM 요소 캐시
-const startButton = document.getElementById('start-button');
-const taskInput = document.getElementById('task-name');
-const timeElapsedSpan = document.getElementById('time-elapsed');
-const timeGridBody = document.getElementById('time-grid-body');
+// DOM 캐싱
+const startButton = document.getElementById("start-button");
+const taskInput = document.getElementById("task-name");
+const timeElapsedSpan = document.getElementById("time-elapsed");
+const timeGridBody = document.getElementById("time-grid-body");
 
 // ----------------------------------------------------
-// 상태 저장 및 복구
+// 🌸 ACTIVE 상태 저장
 // ----------------------------------------------------
 function saveActiveTask() {
     if (isTracking) {
-        localStorage.setItem('activeTask', JSON.stringify(currentTask));
+        localStorage.setItem("activeTask", JSON.stringify(currentTask));
     } else {
-        localStorage.removeItem('activeTask');
+        localStorage.removeItem("activeTask");
     }
 }
 
 // ----------------------------------------------------
-// 그리드 생성
+// 🌸 Grid 생성 (08:00 ~ 23:50)
 // ----------------------------------------------------
 function createGridRows() {
-    timeGridBody.innerHTML = '';
-    for (let h = START_HOUR; h <= START_HOUR + TOTAL_HOURS; h++) {
-        const actualHour = h % 24;
-        if (h > 24 && actualHour > END_HOUR && actualHour < START_HOUR) break;
+    timeGridBody.innerHTML = "";
 
-        const row = document.createElement('tr');
+    for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
+        const row = document.createElement("tr");
 
-        const hourHeader = document.createElement('th');
-        hourHeader.className = 'time-header';
-        hourHeader.textContent = actualHour;
-        row.appendChild(hourHeader);
+        // 시(th) 헤더
+        const th = document.createElement("th");
+        th.className = "time-header";
+        th.textContent = hour;
+        row.appendChild(th);
 
-        for (let m = 0; m < 60; m += MINUTES_PER_CELL) {
-            const cell = document.createElement('td');
-            cell.id = `cell-${actualHour}-${m}`;
-            row.appendChild(cell);
+        // 10분 간격 셀 6개
+        for (let min = 0; min < 60; min += MINUTES_PER_CELL) {
+            const td = document.createElement("td");
+            td.id = `cell-${hour}-${min}`;
+            row.appendChild(td);
         }
+
         timeGridBody.appendChild(row);
     }
 }
 
+// ----------------------------------------------------
+// ⏱ 타이머
+// ----------------------------------------------------
 function formatTime(totalSeconds) {
-    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-    const seconds = String(totalSeconds % 60).padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
+    const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+    const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const s = String(totalSeconds % 60).padStart(2, "0");
+    return `${h}:${m}:${s}`;
 }
 
 function updateTimer() {
@@ -85,63 +93,70 @@ function updateTimer() {
     timeElapsedSpan.textContent = formatTime(elapsed);
 }
 
+// ----------------------------------------------------
+// 🌸 START / COMPLETE 버튼
+// ----------------------------------------------------
 function handleStartStop() {
     if (!isTracking) {
         // START
-        const taskName = taskInput.value.trim();
-        if (taskName === '') {
-            alert("지금 하는 일을 입력해주세요.");
+        const name = taskInput.value.trim();
+        if (name === "") {
+            alert("지금 하는 일을 입력해주세요!");
             return;
         }
 
         isTracking = true;
-        currentTask.name = taskName;
+
+        currentTask.name = name;
         currentTask.startTime = Date.now();
-        currentTask.color = getRandomPastelColor(lastColor);  // ★ 랜덤 색
+        currentTask.color = getRandomPastelColor(lastColor);
         lastColor = currentTask.color;
 
-        startButton.textContent = 'COMPLETE';
-        startButton.classList.add('stop-state');
         taskInput.disabled = true;
+        startButton.textContent = "COMPLETE";
+        startButton.classList.add("stop-state");
 
         timerInterval = setInterval(updateTimer, 1000);
         saveActiveTask();
+
     } else {
         // COMPLETE
         isTracking = false;
         clearInterval(timerInterval);
 
         const endTime = Date.now();
-        const newRecord = {
+        const record = {
             name: currentTask.name,
             color: currentTask.color,
             startTime: currentTask.startTime,
             endTime: endTime
         };
 
-        addRecord(newRecord);
+        addRecord(record);
 
-        startButton.textContent = 'START';
-        startButton.classList.remove('stop-state');
-        taskInput.value = '';
+        // UI 초기화
+        startButton.textContent = "START";
+        startButton.classList.remove("stop-state");
         taskInput.disabled = false;
-        timeElapsedSpan.textContent = '00:00:00';
+        taskInput.value = "";
+        timeElapsedSpan.textContent = "00:00:00";
 
+        // state 리셋
+        currentTask = { name: "", startTime: 0, color: "" };
         saveActiveTask();
-        currentTask = { name: '', startTime: 0, color: '' };
     }
 }
 
 // ----------------------------------------------------
-// LocalStorage + Grid 렌더링
+// 🌸 LocalStorage 저장/로드
 // ----------------------------------------------------
 function saveRecordsToLocal(records) {
-    localStorage.setItem('timeTrackerRecordsGrid', JSON.stringify(records));
+    localStorage.setItem("timeTrackerRecordsGrid", JSON.stringify(records));
 }
 
 function getRecordsFromLocal() {
-    const recordsJson = localStorage.getItem('timeTrackerRecordsGrid');
-    return recordsJson ? JSON.parse(recordsJson) : [];
+    const json = localStorage.getItem("timeTrackerRecordsGrid");
+    return json ? JSON.parse(json) : [];
 }
 
 function addRecord(record) {
@@ -151,72 +166,82 @@ function addRecord(record) {
     renderGrid(records);
 }
 
+// ----------------------------------------------------
+// 🌸 Grid 렌더링
+// ----------------------------------------------------
 function renderGrid(records) {
-    document.querySelectorAll('#time-grid-body td').forEach(cell => {
-        cell.className = '';
-        cell.style.backgroundColor = '';
-        cell.innerHTML = '';
+    // 전체 초기화
+    document.querySelectorAll("#time-grid-body td").forEach(cell => {
+        cell.className = "";
+        cell.style.backgroundColor = "";
+        cell.innerHTML = "";
     });
 
     records.forEach(record => {
         const start = new Date(record.startTime);
         const end = new Date(record.endTime);
 
-        const startMinute = Math.ceil(start.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
-        const endMinute = Math.floor(end.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
+        // 10분 단위 반올림
+        const startMin = Math.ceil(start.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
+        const endMin = Math.floor(end.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
 
-        let current = new Date(start);
-        current.setMinutes(startMinute);
-        current.setSeconds(0);
-        current.setMilliseconds(0);
+        let cur = new Date(start);
+        cur.setMinutes(startMin, 0, 0);
 
-        while (current.getTime() < end.getTime()) {
-            const hour = current.getHours();
-            const minute = current.getMinutes();
-            const cell = document.getElementById(`cell-${hour}-${minute}`);
+        while (cur.getTime() < end.getTime()) {
+            const h = cur.getHours();
+            const m = cur.getMinutes();
 
+            // 08~23 사이만 채움 (버그 완전 방지)
+            if (h < START_HOUR || h > END_HOUR) break;
+
+            const cell = document.getElementById(`cell-${h}-${m}`);
             if (cell) {
-                cell.className = 'filled-cell';
+                cell.className = "filled-cell";
                 cell.style.backgroundColor = record.color;
 
-                if (current.getTime() === new Date(start).setMinutes(startMinute, 0, 0)) {
+                // 첫 셀에 라벨 표시
+                if (cur.getTime() === new Date(start).setMinutes(startMin, 0, 0)) {
                     cell.innerHTML = `<span class="cell-label">${record.name}</span>`;
-                    cell.title = `${record.name} (${new Date(record.startTime).toLocaleTimeString()} ~ ${new Date(record.endTime).toLocaleTimeString()})`;
+                    cell.title = `${record.name}\n${start.toLocaleTimeString()} ~ ${end.toLocaleTimeString()}`;
                 }
             }
 
-            current.setMinutes(minute + MINUTES_PER_CELL);
-            if (current.getHours() > END_HOUR && current.getHours() < START_HOUR) break;
+            cur.setMinutes(m + MINUTES_PER_CELL);
         }
     });
 }
 
+// ----------------------------------------------------
+// 🌸 기록 전체 삭제
+// ----------------------------------------------------
 function resetAllRecords() {
-    if (confirm("정말로 모든 기록을 삭제하시겠습니까?")) {
-        localStorage.removeItem('timeTrackerRecordsGrid');
-        localStorage.removeItem('activeTask');
+    if (confirm("모든 기록을 정말로 삭제하시겠습니까?")) {
+        localStorage.removeItem("timeTrackerRecordsGrid");
+        localStorage.removeItem("activeTask");
         renderGrid([]);
-        alert("모든 기록이 초기화되었습니다.");
+        alert("초기화 완료!");
     }
 }
 
 // ----------------------------------------------------
-// 초기 로드 + 진행 중 작업 복구
+// 🌸 초기 로드
 // ----------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     createGridRows();
     renderGrid(getRecordsFromLocal());
 
-    const activeTaskJson = localStorage.getItem('activeTask');
-    if (activeTaskJson) {
-        const storedTask = JSON.parse(activeTaskJson);
-
-        currentTask = storedTask;
+    // 진행 중이던 작업 복구
+    const activeJson = localStorage.getItem("activeTask");
+    if (activeJson) {
+        const stored = JSON.parse(activeJson);
+        currentTask = stored;
         isTracking = true;
-        taskInput.value = currentTask.name;
+
+        taskInput.value = stored.name;
         taskInput.disabled = true;
-        startButton.textContent = 'COMPLETE';
-        startButton.classList.add('stop-state');
+        startButton.textContent = "COMPLETE";
+        startButton.classList.add("stop-state");
 
         timerInterval = setInterval(updateTimer, 1000);
     }
