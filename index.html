@@ -226,7 +226,7 @@
         }
 
         /* -------------------------- */
-        /* ✨ SUMMARY VIEW STYLES (오버플로우 문제 해결) */
+        /* ✨ SUMMARY VIEW STYLES (오버플로우 문제 재수정) */
         /* -------------------------- */
         #summary-view {
             padding: 0;
@@ -239,7 +239,6 @@
             box-shadow: 0 3px 10px rgba(120, 160, 210, 0.1);
             padding: 12px;
             border: 1px solid #e6f1ff;
-            /* 1. 카드 간 간격 조정: 뒤로가기 버튼과의 여백을 확보 */
             margin-bottom: 14px; 
             box-sizing: border-box; 
             width: 100%;
@@ -257,8 +256,9 @@
         /* 2. 그래프 섹션 */
         #donut-chart-container {
             position: relative;
-            /* 캔버스 사이즈 제어를 위해 높이 유지 */
-            height: 180px; 
+            /* **수정: 고정된 높이를 제거하여 컨테이너가 내용물에 맞게 유동적으로 늘어나도록 함** */
+            /* height: 180px;  <- 이 부분을 제거 */
+            padding-bottom: 5px; /* 내부 여백 추가 */
         }
         
         /* 캔버스 사이즈 제어 (Chart.js 오버플로우 방지) */
@@ -269,16 +269,25 @@
 
         #donut-chart-container h3{color:var(--accent-dark);margin:0 0 8px 0;font-size:14px; text-align: center;}
         
-        /* 2. 범례(Legend) 공간 확보: 카드의 아래쪽 패딩 영역을 침범하지 않도록 여백 추가 */
+        /* 2. 범례(Legend) 공간 확보: 오버플로우 발생 지점 */
         .legend{
             display:flex;
-            flex-wrap:wrap;
-            gap:4px;
-            margin-top:8px;
+            flex-wrap:wrap; /* 항목이 많을 때 줄바꿈 허용 */
+            gap: 6px 4px; /* 줄바꿈 시 세로 간격(6px)과 가로 간격(4px) 설정 */
+            margin-top:12px; /* 차트와의 간격 확보 */
             justify-content: center;
-            margin-bottom: 8px; /* 추가: 범례 아래 여백 확보 */
+            margin-bottom: 0; /* 카드가 이미 충분한 패딩을 가지고 있으므로, 범례 자체의 하단 마진은 최소화 */
         }
-        .legend-item{display:flex;gap:4px;align-items:center;padding:4px 6px;border-radius:999px;background:#fbfdff;border:1px solid #f0f6ff;font-size:10px}
+        .legend-item{
+            display:flex;
+            gap:4px;
+            align-items:center;
+            padding:4px 6px;
+            border-radius:999px;
+            background:#fbfdff;
+            border:1px solid #f0f6ff;
+            font-size:10px;
+        }
         .swatch{width:10px;height:10px;border-radius:3px}
 
         /* 뒤로가기 버튼 */
