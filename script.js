@@ -37,24 +37,24 @@ const END_HOUR = 23;     // 23:50까지
 const MINUTES_PER_CELL = 10;
 
 // ----------------------------------------------------
-// 🌸 DOM 캐싱 (✨ 그래프 및 리스트 요소 추가)
+// 🌸 DOM 캐싱
 // ----------------------------------------------------
 const startButton = document.getElementById("start-button");
 const taskInput = document.getElementById("task-name");
 const timeElapsedSpan = document.getElementById("time-elapsed");
 const timeGridBody = document.getElementById("time-grid-body");
 
-// 새로 추가된 DOM 요소
+// 화면 전환 및 요약 관련 DOM 요소
 const summaryButton = document.getElementById('summary-button');
 const backButton = document.getElementById('back-button');
 const mainView = document.getElementById('main-view');
 const summaryView = document.getElementById('summary-view');
 
 // ✨ 요약 화면 상세 요소 캐싱
-const totalHoursEl = document.getElementById('total-hours'); // 총합 시간 표시
-const taskListEl = document.getElementById('task-list');     // 상세 리스트 컨테이너
-const legendEl = document.getElementById('legend');         // 그래프 범례 컨테이너
-const donutCanvas = document.getElementById('donut');       // Chart.js 캔버스
+const totalHoursEl = document.getElementById('total-hours'); 
+const taskListEl = document.getElementById('task-list');     
+const legendEl = document.getElementById('legend');         
+const donutCanvas = document.getElementById('donut');       
 
 // ----------------------------------------------------
 // 🌸 ACTIVE 상태 저장
@@ -82,10 +82,10 @@ function createGridRows() {
         th.textContent = hour;
         row.appendChild(th);
 
-        // 10분 간격 셀 6개
+        // 초기 DOM 로드 시에는 임시 <td>를 만듭니다. (renderGrid에서 실제 셀로 대체됨)
         for (let min = 0; min < 60; min += MINUTES_PER_CELL) {
             const td = document.createElement("td");
-            td.id = `cell-${hour}-${min}`;
+            // td.id = `cell-${hour}-${min}`; // ID는 renderGrid에서 colSpan 적용 시 첫 셀에만 할당
             row.appendChild(td);
         }
 
@@ -116,7 +116,7 @@ function handleStartStop() {
         // START
         const name = taskInput.value.trim();
         if (name === "") {
-            alert("지금 하는 일을 입력해주세요!");
+            console.warn("지금 하는 일을 입력해주세요!"); 
             return;
         }
 
@@ -182,64 +182,150 @@ function addRecord(record) {
 }
 
 // ----------------------------------------------------
-// 🌸 Grid 렌더링
+// 🌸 Grid 렌더링 (colSpan 적용)
 // ----------------------------------------------------
 function renderGrid(records) {
-    // 전체 초기화
-    document.querySelectorAll("#time-grid-body td").forEach(cell => {
-        cell.className = "";
-        cell.style.backgroundColor = "";
-        cell.innerHTML = "";
-    });
-
+    // 1. 전체 그리드 상태 맵 생성: 어떤 10분 슬롯이 어떤 레코드로 채워지는지 기록
+    const gridMap = {}; 
+    
+    // 맵 채우기
     records.forEach(record => {
         const start = new Date(record.startTime);
         const end = new Date(record.endTime);
-        const MINUTES_PER_CELL = 10;
-
-        // 10분 단위 반올림
-        const startMin = Math.ceil(start.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
+        
+        // 10분 단위로 올림된 시작 분 계산 (예: 08:03 -> 08:10)
+        let startMin = start.getMinutes();
+        if (startMin % MINUTES_PER_CELL !== 0) {
+            startMin = Math.ceil(startMin / MINUTES_PER_CELL) * MINUTES_PER_CELL;
+        }
 
         let cur = new Date(start);
-        cur.setMinutes(startMin, 0, 0);
-
+        cur.setMinutes(startMin, 0, 0); // 첫 번째 유효 셀의 시점 설정
+        
+        // 10분 간격으로 순회하며 맵에 기록
         while (cur.getTime() < end.getTime()) {
             const h = cur.getHours();
             const m = cur.getMinutes();
-
-            // 08~23 사이만 채움 (버그 완전 방지)
-            if (h < START_HOUR || h > END_HOUR) break;
-
-            const cell = document.getElementById(`cell-${h}-${m}`);
-            if (cell) {
-                cell.className = "filled-cell";
-                cell.style.backgroundColor = record.color;
-
-                // 첫 셀에 라벨 표시
-                if (cur.getTime() === new Date(start).setMinutes(startMin, 0, 0)) {
-                    cell.innerHTML = `<span class="cell-label">${record.name}</span>`;
-                    cell.title = `${record.name}\n${start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} ~ ${end.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+            const key = `${h}-${m}`;
+            
+            // 08~23시 사이, 10분 간격인 경우만 기록
+            if (h >= START_HOUR && h <= END_HOUR && m % MINUTES_PER_CELL === 0) {
+                // 이미 다른 레코드가 점유한 셀이라면 덮어쓰지 않음 (기록 시간 순서대로 처리)
+                if (!gridMap[key]) {
+                    gridMap[key] = { record: record };
                 }
             }
             cur.setMinutes(m + MINUTES_PER_CELL);
         }
     });
+
+    // 2. Grid 재구성 및 렌더링 (colSpan 적용)
+    const allRows = timeGridBody.querySelectorAll('tr');
+
+    for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
+        const rowIndex = hour - START_HOUR;
+        const row = allRows[rowIndex];
+
+        // 🚨 중요: 기존의 모든 <td>를 제거 (th는 그대로 유지)
+        Array.from(row.querySelectorAll('td')).forEach(td => td.remove());
+        
+        // 시간대별로 <td>를 생성
+        for (let min = 0; min < 60; min += MINUTES_PER_CELL) {
+            const key = `${hour}-${min}`;
+            const cellData = gridMap[key];
+
+            if (cellData) {
+                const record = cellData.record;
+                
+                // 현재 셀이 이 레코드를 나타내는 새로운 블록의 시작인지 확인
+                const prevMin = min - MINUTES_PER_CELL;
+                const prevKey = (min === 0) ? `${hour-1}-50` : `${hour}-${prevMin}`;
+                
+                // 이전 10분 블록이 같은 레코드에 의해 채워졌다면, 현재 셀은 이미 병합되었으므로 스킵
+                if (gridMap[prevKey] && gridMap[prevKey].record === record) {
+                    continue; 
+                }
+                
+                // 새로운 블록 시작: 연속된 블록의 길이를 계산
+                let spanCount = 0;
+                let curMin = min;
+                let curHour = hour;
+
+                // 현재 시간부터 다음 블록이 끊길 때까지 spanCount 계산
+                while (true) {
+                    const checkKey = `${curHour}-${curMin}`;
+                    
+                    if (gridMap[checkKey] && gridMap[checkKey].record === record) {
+                        spanCount++;
+                        curMin += MINUTES_PER_CELL;
+                        
+                        // 현재 시간대가 50분(마지막)을 넘기면 다음 시간대로 이동
+                        if (curMin >= 60) {
+                            curMin = 0;
+                            curHour++;
+                            // 다음 시간대가 맵에 없거나 END_HOUR를 넘기면 종료
+                            if (curHour > END_HOUR || !gridMap[`${curHour}-${curMin}`] || gridMap[`${curHour}-${curMin}`].record !== record) {
+                                break;
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                
+                // 새로운 <td> 엘리먼트 생성 (병합될 첫 번째 셀)
+                const td = document.createElement("td");
+                td.id = `cell-${hour}-${min}`; // 첫 셀 ID 할당
+                td.className = "filled-cell";
+                td.style.backgroundColor = record.color;
+                td.colSpan = spanCount; // 병합 적용
+
+                const start = new Date(record.startTime);
+                const end = new Date(record.endTime);
+                
+                // 라벨 표시 (병합된 셀의 가운데에 표시)
+                td.innerHTML = `<span class="cell-label">${record.name}</span>`;
+                td.title = `${record.name}\n${start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} ~ ${end.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+                
+                row.appendChild(td);
+
+                // 이미 처리된 셀을 건너뛰기 위해 min을 업데이트
+                // min += (spanCount * MINUTES_PER_CELL) - MINUTES_PER_CELL; // 이 행은 필요 없음. for 루프의 min+=10이 이미 spanCount만큼 이동을 보장함.
+
+            } else {
+                // 데이터가 없는 빈 셀
+                const td = document.createElement("td");
+                td.id = `cell-${hour}-${min}`; // 빈 셀 ID 할당
+                row.appendChild(td);
+            }
+        }
+    }
 }
 
 // ----------------------------------------------------
 // 🌸 기록 전체 삭제
 // ----------------------------------------------------
 function resetAllRecords() {
+    // alert 대신 console.log로 대체 
     if (confirm("모든 기록을 정말로 삭제하시겠습니까?")) {
         localStorage.removeItem("timeTrackerRecordsGrid");
         localStorage.removeItem("activeTask");
         renderGrid([]);
-        alert("초기화 완료!");
+        // 요약 화면이 열려 있다면 닫고 메인으로 돌아감
+        if (summaryView.style.display !== 'none') {
+            summaryView.style.display = 'none';
+            mainView.style.display = 'block';
+            if(donutChart) {
+                donutChart.destroy(); 
+                donutChart = null;
+            }
+        }
+        console.log("기록 초기화 완료!");
     }
 }
 
 // ----------------------------------------------------
-// 🌸 요약 화면 기능 (✨ 상세 리스트 및 그래프 로직)
+// 🌸 요약 화면 기능 (상세 리스트 및 그래프 로직)
 // ----------------------------------------------------
 function renderSummary() {
     const records = getRecordsFromLocal();
@@ -272,7 +358,10 @@ function renderSummary() {
     const chartData = [];
     const chartColors = [];
 
-    Object.entries(summary).forEach(([name, data]) => {
+    // 데이터를 시간 순이 아닌, 시간 총합이 많은 순으로 정렬
+    const sortedSummary = Object.entries(summary).sort(([, a], [, b]) => b.minutes - a.minutes);
+
+    sortedSummary.forEach(([name, data]) => {
         const mins = data.minutes;
         const h = Math.floor(mins / 60);
         const m = mins % 60;
@@ -313,7 +402,7 @@ function renderSummary() {
     if (chartData.length > 0) {
         donutCanvas.style.display = 'block';
         const ctx = donutCanvas.getContext('2d');
-        // Chart 객체가 전역에 로드되어 있다고 가정
+        
         donutChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -352,9 +441,59 @@ function renderSummary() {
 }
 
 // ----------------------------------------------------
+// 🌸 더미 데이터 로드 (첫 실행 시에만)
+// ----------------------------------------------------
+function loadDummyData() {
+    const records = getRecordsFromLocal();
+    if (records.length > 0) return; // 이미 데이터가 있으면 실행하지 않음
+
+    const now = Date.now();
+    const dayStart = new Date();
+    dayStart.setHours(8, 0, 0, 0); // 오늘 8시 00분 기준
+
+    const dummyRecords = [
+        // 1. 코드 작성 (연속 2시간 40분 - colSpan 테스트)
+        {
+            name: "핵심 기능 구현 및 단위 테스트 작성", // 긴 이름 테스트
+            color: PASTEL_COLORS[0],
+            startTime: dayStart.getTime(),
+            endTime: dayStart.getTime() + (2 * 60 * 60 * 1000) + (40 * 60 * 1000)
+        },
+        // 2. 미팅 참여 (30분) - 11시 30분 시작
+        {
+            name: "일일 스크럼 미팅",
+            color: PASTEL_COLORS[1],
+            startTime: dayStart.getTime() + (3.5 * 60 * 60 * 1000), 
+            endTime: dayStart.getTime() + (4 * 60 * 60 * 1000) 
+        },
+        // 3. 문서 검토 (1시간 15분) - 14시 시작
+        {
+            name: "프로젝트 기획 문서 최종 검토 및 피드백", // 긴 이름 테스트
+            color: PASTEL_COLORS[2],
+            startTime: dayStart.getTime() + (6 * 60 * 60 * 1000),
+            endTime: dayStart.getTime() + (7.25 * 60 * 60 * 1000) 
+        },
+        // 4. 짧은 코드 디버깅 (20분) - 17시 시작
+        {
+            name: "긴급 버그 수정",
+            color: PASTEL_COLORS[3],
+            startTime: dayStart.getTime() + (9 * 60 * 60 * 1000), 
+            endTime: dayStart.getTime() + (9.33 * 60 * 60 * 1000) 
+        }
+    ];
+
+    saveRecordsToLocal(dummyRecords);
+    console.log("더미 데이터가 로드되었습니다. 총 4시간 45분 기록.");
+}
+
+
+// ----------------------------------------------------
 // 🌸 이벤트 리스너 및 초기 로드
 // ----------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
+    // 0. 더미 데이터 로드 (데이터가 비어있을 때만)
+    loadDummyData();
+
     // 1. 초기 Grid 및 Active Task 로드 
     createGridRows();
     renderGrid(getRecordsFromLocal());
