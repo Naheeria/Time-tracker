@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>파스텔 타임 트래커</title>
     
+    <!-- 🌟 Chart.js CDN 필수 🌟 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
+    <!-- 🎨 CSS (컨테이너 오버플로우 문제 해결) -->
     <style>
         /* ------------------------------
            🌸 파스텔 테마 변수 (통합)
@@ -21,7 +23,7 @@
         
             --text-main: #3a4b66;
             --text-light: #6f7c8f;
-            --muted: #6f7c8f; /* 요약뷰용 추가 */
+            --muted: #6f7c8f; 
         
             --start: #b8f0ff;
             --start-hover: #a3e6ff;
@@ -224,11 +226,12 @@
         }
 
         /* -------------------------- */
-        /* ✨ SUMMARY VIEW STYLES (업데이트된 스타일) */
+        /* ✨ SUMMARY VIEW STYLES (오버플로우 해결) */
         /* -------------------------- */
         #summary-view {
-            padding: 10px;
+            padding: 0;
             display: none;
+            width: 100%;
         }
         .summary-card {
             background: var(--card);
@@ -237,6 +240,9 @@
             padding: 12px;
             border: 1px solid #e6f1ff;
             margin-bottom: 10px;
+            /* 🔥 핵심 수정: 패딩과 보더를 너비에 포함시켜 오버플로우 방지 */
+            box-sizing: border-box; 
+            width: 100%;
         }
 
         /* 1. 요약/총합 섹션 */
@@ -251,9 +257,16 @@
         /* 2. 그래프 섹션 */
         #donut-chart-container {
             position: relative;
-            width: 100%;
-            height: 180px;
+            /* summary-card에 box-sizing: border-box가 적용되어, 이제 height만 신경씁니다. */
+            height: 180px; 
         }
+        
+        /* 캔버스 사이즈 제어 (Chart.js 오버플로우 방지) */
+        #donut {
+            max-width: 100% !important; 
+            height: auto !important; 
+        }
+
         #donut-chart-container h3{color:var(--accent-dark);margin:0 0 8px 0;font-size:14px; text-align: center;}
         .legend{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;justify-content: center;}
         .legend-item{display:flex;gap:4px;align-items:center;padding:4px 6px;border-radius:999px;background:#fbfdff;border:1px solid #f0f6ff;font-size:10px}
@@ -263,7 +276,7 @@
         #back-button {
             margin-top: 10px;
             width: 100%;
-            padding: 8px; /* 메인 버튼과 통일 */
+            padding: 8px; 
             background: #e6e6e6;
             font-size: 11px;
         }
@@ -276,6 +289,7 @@
 <body>
     <div id="tracker-widget" class="card">
         
+        <!-- 🌟 메인 뷰 🌟 -->
         <div id="main-view">
             <h3 class="widget-title">⏳ 시간 트래커</h3>
             
@@ -288,6 +302,7 @@
                 <span id="time-elapsed">00:00:00</span>
             </div>
             
+            <!-- Grid (표) 영역 -->
             <div id="grid-container">
                 <table>
                     <thead>
@@ -297,7 +312,8 @@
                         </tr>
                     </thead>
                     <tbody id="time-grid-body">
-                        </tbody>
+                        <!-- JS에서 행이 채워집니다. -->
+                    </tbody>
                 </table>
             </div>
         
@@ -307,15 +323,19 @@
             </div>
         </div>
 
+        <!-- 🌟 요약 뷰 🌟 -->
         <div id="summary-view" style="display: none;">
             
+            <!-- 1. 총합 및 상세 리스트 -->
             <div class="summary-card">
                 <div class="headline">오늘 요약</div>
                 <div id="total-hours" class="total"></div>
                 <div id="task-list" class="tasks">
-                    </div>
+                    <!-- 상세 태스크 리스트가 JS로 채워짐 -->
+                </div>
             </div>
 
+            <!-- 2. 그래프 -->
             <div class="summary-card" id="donut-chart-container">
                 <h3>태스크 분포</h3>
                 <canvas id="donut"></canvas>
@@ -327,6 +347,7 @@
         
     </div>
 
+    <!-- 스크립트 파일 로드 -->
     <script src="script.js"></script>
 </body>
 </html>
