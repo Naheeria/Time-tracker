@@ -226,7 +226,7 @@
         }
 
         /* -------------------------- */
-        /* ✨ SUMMARY VIEW STYLES (오버플로우 해결) */
+        /* ✨ SUMMARY VIEW STYLES (오버플로우 문제 해결) */
         /* -------------------------- */
         #summary-view {
             padding: 0;
@@ -239,8 +239,8 @@
             box-shadow: 0 3px 10px rgba(120, 160, 210, 0.1);
             padding: 12px;
             border: 1px solid #e6f1ff;
-            margin-bottom: 10px;
-            /* 🔥 핵심 수정: 패딩과 보더를 너비에 포함시켜 오버플로우 방지 */
+            /* 1. 카드 간 간격 조정: 뒤로가기 버튼과의 여백을 확보 */
+            margin-bottom: 14px; 
             box-sizing: border-box; 
             width: 100%;
         }
@@ -257,7 +257,7 @@
         /* 2. 그래프 섹션 */
         #donut-chart-container {
             position: relative;
-            /* summary-card에 box-sizing: border-box가 적용되어, 이제 height만 신경씁니다. */
+            /* 캔버스 사이즈 제어를 위해 높이 유지 */
             height: 180px; 
         }
         
@@ -268,7 +268,16 @@
         }
 
         #donut-chart-container h3{color:var(--accent-dark);margin:0 0 8px 0;font-size:14px; text-align: center;}
-        .legend{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;justify-content: center;}
+        
+        /* 2. 범례(Legend) 공간 확보: 카드의 아래쪽 패딩 영역을 침범하지 않도록 여백 추가 */
+        .legend{
+            display:flex;
+            flex-wrap:wrap;
+            gap:4px;
+            margin-top:8px;
+            justify-content: center;
+            margin-bottom: 8px; /* 추가: 범례 아래 여백 확보 */
+        }
         .legend-item{display:flex;gap:4px;align-items:center;padding:4px 6px;border-radius:999px;background:#fbfdff;border:1px solid #f0f6ff;font-size:10px}
         .swatch{width:10px;height:10px;border-radius:3px}
 
