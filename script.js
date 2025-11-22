@@ -5,6 +5,7 @@ let isTracking = false;
 let timerInterval = null;
 let currentTask = { name: '', startTime: 0, color: '' };
 let lastColor = null;
+let donutChart = null; // ✨ Chart.js 인스턴스를 저장할 변수
 
 // ----------------------------------------------------
 // 🌸 파스텔 팔레트 (랜덤 + 이전 중복 금지)
@@ -35,16 +36,25 @@ const START_HOUR = 8;    // 08:00 시작
 const END_HOUR = 23;     // 23:50까지
 const MINUTES_PER_CELL = 10;
 
-// DOM 캐싱 (추가 버튼 포함)
+// ----------------------------------------------------
+// 🌸 DOM 캐싱 (✨ 그래프 및 리스트 요소 추가)
+// ----------------------------------------------------
 const startButton = document.getElementById("start-button");
 const taskInput = document.getElementById("task-name");
 const timeElapsedSpan = document.getElementById("time-elapsed");
 const timeGridBody = document.getElementById("time-grid-body");
+
 // 새로 추가된 DOM 요소
 const summaryButton = document.getElementById('summary-button');
 const backButton = document.getElementById('back-button');
 const mainView = document.getElementById('main-view');
 const summaryView = document.getElementById('summary-view');
+
+// ✨ 요약 화면 상세 요소 캐싱
+const totalHoursEl = document.getElementById('total-hours'); // 총합 시간 표시
+const taskListEl = document.getElementById('task-list');     // 상세 리스트 컨테이너
+const legendEl = document.getElementById('legend');         // 그래프 범례 컨테이너
+const donutCanvas = document.getElementById('donut');       // Chart.js 캔버스
 
 // ----------------------------------------------------
 // 🌸 ACTIVE 상태 저장
@@ -185,10 +195,10 @@ function renderGrid(records) {
     records.forEach(record => {
         const start = new Date(record.startTime);
         const end = new Date(record.endTime);
+        const MINUTES_PER_CELL = 10;
 
         // 10분 단위 반올림
         const startMin = Math.ceil(start.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
-        const endMin = Math.floor(end.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
 
         let cur = new Date(start);
         cur.setMinutes(startMin, 0, 0);
@@ -208,10 +218,9 @@ function renderGrid(records) {
                 // 첫 셀에 라벨 표시
                 if (cur.getTime() === new Date(start).setMinutes(startMin, 0, 0)) {
                     cell.innerHTML = `<span class="cell-label">${record.name}</span>`;
-                    cell.title = `${record.name}\n${start.toLocaleTimeString()} ~ ${end.toLocaleTimeString()}`;
+                    cell.title = `${record.name}\n${start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} ~ ${end.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
                 }
             }
-
             cur.setMinutes(m + MINUTES_PER_CELL);
         }
     });
@@ -230,36 +239,123 @@ function resetAllRecords() {
 }
 
 // ----------------------------------------------------
-// 🌸 요약 화면 기능 (채찍이의 코드 추가)
+// 🌸 요약 화면 기능 (✨ 상세 리스트 및 그래프 로직)
 // ----------------------------------------------------
-
-// 기록 요약 생성
 function renderSummary() {
     const records = getRecordsFromLocal();
     const summary = {};
+    let totalMinutes = 0;
 
+    // 1. 데이터 집계
     records.forEach(r => {
-        const mins = Math.floor((r.endTime - r.startTime) / 60000);
-        summary[r.name] = (summary[r.name] || 0) + mins;
+        // 기록이 5분 미만인 경우 제외 (노이즈 방지)
+        const durationMins = Math.floor((r.endTime - r.startTime) / 60000); 
+        if (durationMins < 5) return;
+        
+        summary[r.name] = summary[r.name] || { minutes: 0, color: r.color, records: [] };
+        summary[r.name].minutes += durationMins;
+        summary[r.name].records.push(r);
+        totalMinutes += durationMins;
     });
 
-    const container = document.getElementById('summary-content');
-    container.innerHTML = '';
+    // 2. 총합 렌더링
+    const totalH = Math.floor(totalMinutes / 60);
+    const totalM = totalMinutes % 60;
+    totalHoursEl.textContent = `총 작업 ${totalH > 0 ? totalH + '시간 ' : ''}${totalM}분`;
 
-    Object.entries(summary).forEach(([name, mins]) => {
+    // 3. 상세 태스크 리스트 및 범례 렌더링
+    taskListEl.innerHTML = '';
+    legendEl.innerHTML = '';
+    
+    // 그래프 데이터 준비
+    const chartLabels = [];
+    const chartData = [];
+    const chartColors = [];
+
+    Object.entries(summary).forEach(([name, data]) => {
+        const mins = data.minutes;
         const h = Math.floor(mins / 60);
         const m = mins % 60;
-        const div = document.createElement('div');
-        div.textContent = `${name}: ${h}시간 ${m}분`;
-        container.appendChild(div);
+
+        // 리스트 항목 생성 (가장 최근 기록의 시간대 사용)
+        const latestRecord = data.records.reduce((latest, current) => current.startTime > latest.startTime ? current : latest);
+        const start = new Date(latestRecord.startTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const end = new Date(latestRecord.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        const item = document.createElement('div');
+        item.className = 'task';
+        item.innerHTML = `
+            <div>
+                <strong>${name}</strong>
+                <div class="small">${start.replace(':', '')} ~ ${end.replace(':', '')} (총 ${h > 0 ? h + 'h ' : ''}${m}m)</div>
+            </div>
+            <div class="badge" style="background:${data.color}">${h > 0 ? h + 'h' : m + 'm'}</div>
+        `;
+        taskListEl.appendChild(item);
+
+        // 그래프 데이터 채우기
+        chartLabels.push(name);
+        chartData.push(mins);
+        chartColors.push(data.color);
+        
+        // 범례 항목 생성
+        const legendItem = document.createElement('div');
+        legendItem.className = 'legend-item';
+        legendItem.innerHTML = `<span class="swatch" style="background:${data.color}"></span> ${name} <strong style="margin-left:4px;color:#3a4b66">${h > 0 ? h + 'h ' : ''}${m}m</strong>`;
+        legendEl.appendChild(legendItem);
     });
+
+    // 4. 그래프 렌더링 (Chart.js)
+    if (donutChart) {
+        donutChart.destroy(); // 기존 차트가 있으면 제거
+    }
+    
+    if (chartData.length > 0) {
+        donutCanvas.style.display = 'block';
+        const ctx = donutCanvas.getContext('2d');
+        // Chart 객체가 전역에 로드되어 있다고 가정
+        donutChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    data: chartData,
+                    backgroundColor: chartColors,
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                cutout: '60%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const min = ctx.raw;
+                                const h = Math.floor(min / 60);
+                                const m = min % 60;
+                                return `${ctx.label}: ${h > 0 ? h + 'h ' : ''}${m}m`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        // 데이터가 없을 때 캔버스 숨김 및 메시지 표시
+        donutCanvas.style.display = 'none';
+        legendEl.innerHTML = '<div style="text-align:center;color:#6f7c8f;padding:20px 0;">기록된 작업이 5분 이상 없습니다.</div>';
+    }
 }
 
 // ----------------------------------------------------
 // 🌸 이벤트 리스너 및 초기 로드
 // ----------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. 초기 Grid 및 Active Task 로드 (기존 로직)
+    // 1. 초기 Grid 및 Active Task 로드 
     createGridRows();
     renderGrid(getRecordsFromLocal());
 
@@ -277,16 +373,16 @@ document.addEventListener("DOMContentLoaded", () => {
         timerInterval = setInterval(updateTimer, 1000);
     }
     
-    // 2. 이벤트 리스너 연결 (새로 추가/수정)
+    // 2. 이벤트 리스너 연결 
     document.getElementById("reset-button").onclick = resetAllRecords;
     startButton.onclick = handleStartStop;
 
-    // 두 화면 토글 (채찍이 로직)
+    // ✨ 화면 토글 이벤트 연결
     if (summaryButton && mainView && summaryView) {
         summaryButton.onclick = () => {
             mainView.style.display = 'none';
             summaryView.style.display = 'block';
-            renderSummary();
+            renderSummary(); // 요약 데이터를 렌더링
         };
     }
     
@@ -294,6 +390,11 @@ document.addEventListener("DOMContentLoaded", () => {
         backButton.onclick = () => {
             summaryView.style.display = 'none';
             mainView.style.display = 'block';
+            // 메모리 누수 방지를 위해 차트 인스턴스 해제
+            if(donutChart) {
+                donutChart.destroy(); 
+                donutChart = null;
+            }
         };
     }
 });
