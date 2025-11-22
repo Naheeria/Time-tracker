@@ -1,248 +1,244 @@
-// ----------------------------------------------------
-// 🌸 전역 변수
-// ----------------------------------------------------
-let isTracking = false;
-let timerInterval = null;
-let currentTask = { name: '', startTime: 0, color: '' };
-let lastColor = null;
+/* ------------------------------
+    🌸 파스텔 테마 변수 (그대로 유지)
+    ------------------------------ */
+:root {
+    --bg: #f7fbff;
+    --card: #ffffff;
+    --border: #cfe7ff;
 
-// ----------------------------------------------------
-// 🌸 파스텔 팔레트 (랜덤 + 이전 중복 금지)
-// ----------------------------------------------------
-const PASTEL_COLORS = [
-    "#a2e8c2", // 연녹
-    "#ffdb99", // 크림 오렌지
-    "#a3c1e7", // 연하늘
-    "#f2a9d8", // 핑크
-    "#c4a8f0", // 연보라
-    "#ffe4e1", // 살구
-    "#c6f3e8", // 민트
-    "#fde2f3"  // 라일락 핑크
-];
+    --accent: #8abfff;
+    --accent-dark: #5a9ce8;
 
-function getRandomPastelColor(prev) {
-    let color;
-    do {
-        color = PASTEL_COLORS[Math.floor(Math.random() * PASTEL_COLORS.length)];
-    } while (color === prev);
-    return color;
+    --text-main: #3a4b66;
+    --text-light: #6f7c8f;
+
+    --start: #b8f0ff;
+    --start-hover: #a3e6ff;
+
+    --stop: #ffd4d4;
+    --stop-hover: #ffbcbc;
+
+    --shadow: 0 6px 18px rgba(120, 160, 210, 0.15);
+    --radius: 12px;
 }
 
-// ----------------------------------------------------
-// 🌸 시간 설정 (옵션 A)
-// ----------------------------------------------------
-const START_HOUR = 8;   // 08:00 시작
-const END_HOUR = 23;    // 23:50까지
-const MINUTES_PER_CELL = 10;
-
-// DOM 캐싱
-const startButton = document.getElementById("start-button");
-const taskInput = document.getElementById("task-name");
-const timeElapsedSpan = document.getElementById("time-elapsed");
-const timeGridBody = document.getElementById("time-grid-body");
-
-// ----------------------------------------------------
-// 🌸 ACTIVE 상태 저장
-// ----------------------------------------------------
-function saveActiveTask() {
-    if (isTracking) {
-        localStorage.setItem("activeTask", JSON.stringify(currentTask));
-    } else {
-        localStorage.removeItem("activeTask");
-    }
+/* ------------------------------
+    🌸 전체 스타일
+    ------------------------------ */
+body {
+    background: var(--bg);
+    font-family: "Pretendard", sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 15px;
+    color: var(--text-main);
 }
 
-// ----------------------------------------------------
-// 🌸 Grid 생성 (08:00 ~ 23:50)
-// ----------------------------------------------------
-function createGridRows() {
-    timeGridBody.innerHTML = "";
-
-    for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
-        const row = document.createElement("tr");
-
-        // 시(th) 헤더
-        const th = document.createElement("th");
-        th.className = "time-header";
-        th.textContent = hour;
-        row.appendChild(th);
-
-        // 10분 간격 셀 6개
-        for (let min = 0; min < 60; min += MINUTES_PER_CELL) {
-            const td = document.createElement("td");
-            td.id = `cell-${hour}-${min}`;
-            row.appendChild(td);
-        }
-
-        timeGridBody.appendChild(row);
-    }
+/* 위젯 카드 (🔥 사이즈 축소) */
+#tracker-widget.card {
+    width: 250px;           /* 💛 핵심: 쁘띠 사이즈 */
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 14px;        /* 🔥 내부 여백 축소 */
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
 }
 
-// ----------------------------------------------------
-// ⏱ 타이머
-// ----------------------------------------------------
-function formatTime(totalSeconds) {
-    const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-    const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-    const s = String(totalSeconds % 60).padStart(2, "0");
-    return `${h}:${m}:${s}`;
+/* 제목 */
+.widget-title {
+    text-align: center;
+    color: var(--accent-dark);
+    font-size: 15px;           /* 🔥 작게 */
+    margin-bottom: 12px;
+    font-weight: 800;
 }
 
-function updateTimer() {
-    const elapsed = Math.floor((Date.now() - currentTask.startTime) / 1000);
-    timeElapsedSpan.textContent = formatTime(elapsed);
+/* ------------------------------
+    ✨ 컨트롤 패널 (🔥 소형화)
+    ------------------------------ */
+#control-panel {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
 }
 
-// ----------------------------------------------------
-// 🌸 START / COMPLETE 버튼
-// ----------------------------------------------------
-function handleStartStop() {
-    if (!isTracking) {
-        // START
-        const name = taskInput.value.trim();
-        if (name === "") {
-            alert("지금 하는 일을 입력해주세요!");
-            return;
-        }
-
-        isTracking = true;
-
-        currentTask.name = name;
-        currentTask.startTime = Date.now();
-        currentTask.color = getRandomPastelColor(lastColor);
-        lastColor = currentTask.color;
-
-        taskInput.disabled = true;
-        startButton.textContent = "COMPLETE";
-        startButton.classList.add("stop-state");
-
-        timerInterval = setInterval(updateTimer, 1000);
-        saveActiveTask();
-
-    } else {
-        // COMPLETE
-        isTracking = false;
-        clearInterval(timerInterval);
-
-        const endTime = Date.now();
-        const record = {
-            name: currentTask.name,
-            color: currentTask.color,
-            startTime: currentTask.startTime,
-            endTime: endTime
-        };
-
-        addRecord(record);
-
-        // UI 초기화
-        startButton.textContent = "START";
-        startButton.classList.remove("stop-state");
-        taskInput.disabled = false;
-        taskInput.value = "";
-        timeElapsedSpan.textContent = "00:00:00";
-
-        // state 리셋
-        currentTask = { name: "", startTime: 0, color: "" };
-        saveActiveTask();
-    }
+#task-name {
+    flex-grow: 1;
+    padding: 6px 8px;          /* 🔥 작게 */
+    font-size: 11px;           /* 🔥 작게 */
+    border: 1.6px solid var(--border);
+    border-radius: var(--radius);
+    background: #fff;
+    transition: 0.2s;
 }
 
-// ----------------------------------------------------
-// 🌸 LocalStorage 저장/로드
-// ----------------------------------------------------
-function saveRecordsToLocal(records) {
-    localStorage.setItem("timeTrackerRecordsGrid", JSON.stringify(records));
+#task-name:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #faf6ff;
 }
 
-function getRecordsFromLocal() {
-    const json = localStorage.getItem("timeTrackerRecordsGrid");
-    return json ? JSON.parse(json) : [];
+/* 버튼 공통 */
+button {
+    padding: 6px 10px;           /* 🔥 작게 */
+    font-size: 11px;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
 }
 
-function addRecord(record) {
-    const records = getRecordsFromLocal();
-    records.push(record);
-    saveRecordsToLocal(records);
-    renderGrid(records);
+/* START 버튼 */
+#start-button {
+    background: var(--start);
+    color: var(--text-main);
+}
+#start-button:hover {
+    background: var(--start-hover);
 }
 
-// ----------------------------------------------------
-// 🌸 Grid 렌더링
-// ----------------------------------------------------
-function renderGrid(records) {
-    // 전체 초기화
-    document.querySelectorAll("#time-grid-body td").forEach(cell => {
-        cell.className = "";
-        cell.style.backgroundColor = "";
-        cell.innerHTML = "";
-    });
-
-    records.forEach(record => {
-        const start = new Date(record.startTime);
-        const end = new Date(record.endTime);
-
-        // 10분 단위 반올림
-        const startMin = Math.ceil(start.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
-        const endMin = Math.floor(end.getMinutes() / MINUTES_PER_CELL) * MINUTES_PER_CELL;
-
-        let cur = new Date(start);
-        cur.setMinutes(startMin, 0, 0);
-
-        while (cur.getTime() < end.getTime()) {
-            const h = cur.getHours();
-            const m = cur.getMinutes();
-
-            // 08~23 사이만 채움 (버그 완전 방지)
-            if (h < START_HOUR || h > END_HOUR) break;
-
-            const cell = document.getElementById(`cell-${h}-${m}`);
-            if (cell) {
-                cell.className = "filled-cell";
-                cell.style.backgroundColor = record.color;
-
-                // 첫 셀에 라벨 표시
-                if (cur.getTime() === new Date(start).setMinutes(startMin, 0, 0)) {
-                    cell.innerHTML = `<span class="cell-label">${record.name}</span>`;
-                    cell.title = `${record.name}\n${start.toLocaleTimeString()} ~ ${end.toLocaleTimeString()}`;
-                }
-            }
-
-            cur.setMinutes(m + MINUTES_PER_CELL);
-        }
-    });
+/* STOP 버튼 */
+.stop-state {
+    background: var(--stop) !important;
+}
+.stop-state:hover {
+    background: var(--stop-hover) !important;
 }
 
-// ----------------------------------------------------
-// 🌸 기록 전체 삭제
-// ----------------------------------------------------
-function resetAllRecords() {
-    if (confirm("모든 기록을 정말로 삭제하시겠습니까?")) {
-        localStorage.removeItem("timeTrackerRecordsGrid");
-        localStorage.removeItem("activeTask");
-        renderGrid([]);
-        alert("초기화 완료!");
-    }
+/* ------------------------------
+    ⏱ 타이머 (🔥 소형화)
+    ------------------------------ */
+#timer-display {
+    text-align: center;
+    font-size: 20px;         /* 🔥 기존 32 → 20 */
+    font-weight: 800;
+    color: var(--accent-dark);
+    margin-bottom: 10px;
 }
 
-// ----------------------------------------------------
-// 🌸 초기 로드
-// ----------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-    createGridRows();
-    renderGrid(getRecordsFromLocal());
+/* ------------------------------
+    📊 표 섹션
+    ------------------------------ */
+#grid-container {
+    overflow-x: auto;
+}
 
-    // 진행 중이던 작업 복구
-    const activeJson = localStorage.getItem("activeTask");
-    if (activeJson) {
-        const stored = JSON.parse(activeJson);
-        currentTask = stored;
-        isTracking = true;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
 
-        taskInput.value = stored.name;
-        taskInput.disabled = true;
-        startButton.textContent = "COMPLETE";
-        startButton.classList.add("stop-state");
+th, td {
+    border: 1px solid var(--border);
+    padding: 3px 0;            /* 🔥 세로 길이 강력 축소 */
+    height: 22px;              /* 🔥 기존 32 → 22 */
+    text-align: center;
+    font-size: 10px;           /* 🔥 테이블 폰트 축소 */
+}
 
-        timerInterval = setInterval(updateTimer, 1000);
-    }
-});
+/* 헤더 */
+thead th {
+    background: #f4f0ff;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+/* 시 헤더 */
+.time-header {
+    background: var(--accent-dark) !important;
+    color: white !important;
+    width: 28px;               /* 🔥 좁게 */
+    font-size: 10px;
+}
+
+/* 기록된 셀 */
+.filled-cell {
+    position: relative;
+}
+
+/* ------------------------------
+    ✨ 셀 라벨 (가독성 유지)
+    ------------------------------ */
+.cell-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 9px;            /* 🔥 줄였지만 여전히 보임 */
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+    color: #333;
+    text-shadow: 0 0 2px rgba(255,255,255,0.6);
+}
+
+/* ------------------------------
+    ✨ 버튼 그룹 (초기화 + 요약)
+    ------------------------------ */
+#action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px; /* 위쪽에 여백 추가 */
+}
+
+/* 기록 초기화 버튼 */
+#reset-button {
+    flex-grow: 1; /* 너비 균등 분할 */
+    padding: 8px;
+    background: #e6e6e6;
+    font-size: 11px;
+}
+#reset-button:hover {
+    background: #d6d6d6;
+}
+
+/* 오늘 요약 보기 버튼 */
+#summary-button {
+    flex-grow: 1; /* 너비 균등 분할 */
+    padding: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+}
+#summary-button:hover {
+    background: var(--accent-dark);
+}
+
+/* ------------------------------
+    ✨ 요약 화면 스타일 (채찍이 반영)
+    ------------------------------ */
+#summary-view {
+    padding: 10px;
+    display: none; /* 초기에는 숨김 */
+}
+
+#summary-content div {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+#summary-content div:last-child {
+    border-bottom: none;
+}
+
+/* 뒤로가기 버튼 (채찍이 반영) */
+#back-button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background: #e6e6e6;
+    font-size: 12px;
+}
+#back-button:hover {
+    background: #d6d6d6;
+}
