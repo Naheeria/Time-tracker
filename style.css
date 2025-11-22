@@ -1,35 +1,26 @@
 /* ------------------------------
-🌸 파스텔 테마 변수
+🌸 파스텔 테마 변수 (그대로 유지)
 ------------------------------ */
 :root {
-    /* 전체 배경과 카드 */
-    --bg: #f7fbff;        /* 연하늘 배경 */
+    --bg: #f7fbff;
     --card: #ffffff;
-    --border: #cfe7ff;     /* 연하늘 테두리 */
+    --border: #cfe7ff;
 
-    /* 포인트 색상 */
-    --accent: #8abfff;     /* 하늘색 포인트 */
-    --accent-dark: #5a9ce8; /* 조금 진한 하늘색 */
+    --accent: #8abfff;
+    --accent-dark: #5a9ce8;
 
-    /* 텍스트 */
-    --text-main: #3a4b66;    /* 차분한 남색 */
+    --text-main: #3a4b66;
     --text-light: #6f7c8f;
 
-    /* 버튼 (START = 민트계열) */
-    --start: #b8f0ff;        /* 파스텔 민트-블루 */
+    --start: #b8f0ff;
     --start-hover: #a3e6ff;
 
-    /* STOP 버튼 */
     --stop: #ffd4d4;
     --stop-hover: #ffbcbc;
 
-    /* 그림자 */
     --shadow: 0 6px 18px rgba(120, 160, 210, 0.15);
-
-    /* 둥근 정도 */
-    --radius: 14px;
+    --radius: 12px;
 }
-
 
 /* ------------------------------
 🌸 전체 스타일
@@ -39,44 +30,43 @@ body {
     font-family: "Pretendard", sans-serif;
     display: flex;
     justify-content: center;
-    padding: 25px;
+    padding: 15px;
     color: var(--text-main);
 }
 
-/* 위젯 카드 */
+/* 위젯 카드 (🔥 사이즈 축소) */
 #tracker-widget.card {
-    width: 100%;
-    max-width: 520px;
+    width: 250px;              /* 💛 핵심: 쁘띠 사이즈 */
     background: var(--card);
     border-radius: var(--radius);
-    padding: 25px 22px;
+    padding: 14px 14px;         /* 🔥 내부 여백 축소 */
     box-shadow: var(--shadow);
-    border: 2px solid var(--border);
+    border: 1.5px solid var(--border);
 }
 
 /* 제목 */
 .widget-title {
     text-align: center;
     color: var(--accent-dark);
-    font-size: 1.4rem;
-    margin-bottom: 20px;
+    font-size: 15px;            /* 🔥 작게 */
+    margin-bottom: 12px;
     font-weight: 800;
 }
 
 /* ------------------------------
-✨ 컨트롤 패널
+✨ 컨트롤 패널 (🔥 소형화)
 ------------------------------ */
 #control-panel {
     display: flex;
-    gap: 10px;
-    margin-bottom: 18px;
+    gap: 6px;
+    margin-bottom: 10px;
 }
 
 #task-name {
     flex-grow: 1;
-    padding: 12px;
-    font-size: 14px;
-    border: 1.8px solid var(--border);
+    padding: 6px 8px;           /* 🔥 작게 */
+    font-size: 11px;            /* 🔥 작게 */
+    border: 1.6px solid var(--border);
     border-radius: var(--radius);
     background: #fff;
     transition: 0.2s;
@@ -90,7 +80,8 @@ body {
 
 /* 버튼 공통 */
 button {
-    padding: 10px 16px;
+    padding: 6px 10px;          /* 🔥 작게 */
+    font-size: 11px;
     font-weight: 700;
     border: none;
     border-radius: var(--radius);
@@ -104,31 +95,31 @@ button {
     background: var(--start);
     color: var(--text-main);
 }
-
 #start-button:hover {
     background: var(--start-hover);
 }
 
-/* STOP 상태 */
+/* STOP 버튼 */
 .stop-state {
     background: var(--stop) !important;
 }
-
 .stop-state:hover {
     background: var(--stop-hover) !important;
 }
 
-/* 타이머 */
+/* ------------------------------
+⏱ 타이머 (🔥 소형화)
+------------------------------ */
 #timer-display {
     text-align: center;
-    font-size: 32px;
+    font-size: 20px;         /* 🔥 기존 32 → 20 */
     font-weight: 800;
     color: var(--accent-dark);
-    margin-bottom: 18px;
+    margin-bottom: 10px;
 }
 
 /* ------------------------------
-📊 그리드 스타일
+📊 표 섹션
 ------------------------------ */
 #grid-container {
     overflow-x: auto;
@@ -145,56 +136,58 @@ table {
 
 th, td {
     border: 1px solid var(--border);
-    padding: 7px 0;
-    height: 32px;
+    padding: 3px 0;            /* 🔥 세로 길이 강력 축소 */
+    height: 22px;              /* 🔥 기존 32 → 22 */
     text-align: center;
-    font-size: 13px;
+    font-size: 10px;           /* 🔥 테이블 폰트 축소 */
 }
 
 /* 헤더 */
 thead th {
     background: #f4f0ff;
     color: var(--text-main);
-    font-weight: 700;
+    font-weight: 600;
 }
 
 /* 시 헤더 */
 .time-header {
     background: var(--accent-dark) !important;
     color: white !important;
-    width: 40px;
+    width: 28px;               /* 🔥 좁게 */
+    font-size: 10px;
 }
 
-/* 기록 셀 */
+/* 기록된 셀 */
 .filled-cell {
     position: relative;
 }
 
-/* --------------------------------------
-✨ 셀 라벨 ★가독성 강화 + 글자 크게 수정됨
--------------------------------------- */
+/* ------------------------------
+✨ 셀 라벨 (가독성 유지)
+------------------------------ */
 .cell-label {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 11px;               /* ⭐ 글자 크게 */
-    font-weight: 600;              /* ⭐ 가독성 */
-    color: #333;
+    font-size: 9px;            /* 🔥 줄였지만 여전히 보임 */
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 90%;                /* 셀 넘칠 때 자연스럽게 */
-    text-shadow: 0 0 2px rgba(255,255,255,0.6); /* ⭐ 밝은 배경에서도 선명 */
+    max-width: 90%;
+    color: #333;
+    text-shadow: 0 0 2px rgba(255,255,255,0.6);
 }
 
+/* 초기화 버튼 */
 #reset-button {
     width: 100%;
-    margin-top: 18px;
-    padding: 12px;
+    margin-top: 12px;
+    padding: 8px;
     background: #e6e6e6;
+    font-size: 11px;
 }
-
 #reset-button:hover {
     background: #d6d6d6;
 }
