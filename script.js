@@ -306,22 +306,23 @@ function renderGrid(records) {
 // 🌸 기록 전체 삭제
 // ----------------------------------------------------
 function resetAllRecords() {
-    // alert 대신 console.log로 대체 
-    if (confirm("모든 기록을 정말로 삭제하시겠습니까?")) {
-        localStorage.removeItem("timeTrackerRecordsGrid");
-        localStorage.removeItem("activeTask");
-        renderGrid([]);
-        // 요약 화면이 열려 있다면 닫고 메인으로 돌아감
-        if (summaryView.style.display !== 'none') {
-            summaryView.style.display = 'none';
-            mainView.style.display = 'block';
-            if(donutChart) {
-                donutChart.destroy(); 
-                donutChart = null;
-            }
+    // 경고 대화 상자 대신 콘솔 경고를 사용하고, 사용자가 버튼을 눌렀으므로 삭제를 진행합니다.
+    console.warn("⚠️ 모든 기록을 삭제합니다. LocalStorage 데이터(timeTrackerRecordsGrid 및 activeTask)가 초기화되었습니다.");
+    
+    localStorage.removeItem("timeTrackerRecordsGrid");
+    localStorage.removeItem("activeTask");
+    renderGrid([]);
+    
+    // 요약 화면이 열려 있다면 닫고 메인으로 돌아감
+    if (summaryView.style.display !== 'none') {
+        summaryView.style.display = 'none';
+        mainView.style.display = 'block';
+        if(donutChart) {
+            donutChart.destroy(); 
+            donutChart = null;
         }
-        console.log("기록 초기화 완료!");
     }
+    console.log("기록 초기화 완료!");
 }
 
 // ----------------------------------------------------
