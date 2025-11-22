@@ -440,60 +440,11 @@ function renderSummary() {
     }
 }
 
-// ----------------------------------------------------
-// 🌸 더미 데이터 로드 (첫 실행 시에만)
-// ----------------------------------------------------
-function loadDummyData() {
-    const records = getRecordsFromLocal();
-    if (records.length > 0) return; // 이미 데이터가 있으면 실행하지 않음
-
-    const now = Date.now();
-    const dayStart = new Date();
-    dayStart.setHours(8, 0, 0, 0); // 오늘 8시 00분 기준
-
-    const dummyRecords = [
-        // 1. 코드 작성 (연속 2시간 40분 - colSpan 테스트)
-        {
-            name: "핵심 기능 구현 및 단위 테스트 작성", // 긴 이름 테스트
-            color: PASTEL_COLORS[0],
-            startTime: dayStart.getTime(),
-            endTime: dayStart.getTime() + (2 * 60 * 60 * 1000) + (40 * 60 * 1000)
-        },
-        // 2. 미팅 참여 (30분) - 11시 30분 시작
-        {
-            name: "일일 스크럼 미팅",
-            color: PASTEL_COLORS[1],
-            startTime: dayStart.getTime() + (3.5 * 60 * 60 * 1000), 
-            endTime: dayStart.getTime() + (4 * 60 * 60 * 1000) 
-        },
-        // 3. 문서 검토 (1시간 15분) - 14시 시작
-        {
-            name: "프로젝트 기획 문서 최종 검토 및 피드백", // 긴 이름 테스트
-            color: PASTEL_COLORS[2],
-            startTime: dayStart.getTime() + (6 * 60 * 60 * 1000),
-            endTime: dayStart.getTime() + (7.25 * 60 * 60 * 1000) 
-        },
-        // 4. 짧은 코드 디버깅 (20분) - 17시 시작
-        {
-            name: "긴급 버그 수정",
-            color: PASTEL_COLORS[3],
-            startTime: dayStart.getTime() + (9 * 60 * 60 * 1000), 
-            endTime: dayStart.getTime() + (9.33 * 60 * 60 * 1000) 
-        }
-    ];
-
-    saveRecordsToLocal(dummyRecords);
-    console.log("더미 데이터가 로드되었습니다. 총 4시간 45분 기록.");
-}
-
 
 // ----------------------------------------------------
 // 🌸 이벤트 리스너 및 초기 로드
 // ----------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-    // 0. 더미 데이터 로드 (데이터가 비어있을 때만)
-    loadDummyData();
-
     // 1. 초기 Grid 및 Active Task 로드 
     createGridRows();
     renderGrid(getRecordsFromLocal());
